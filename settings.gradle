@@ -1,0 +1,2 @@
+rootProject.name='DoLife'
+include ':app'
