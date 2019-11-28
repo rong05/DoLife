@@ -1,2 +1,3 @@
 rootProject.name='DoLife'
 include ':app'
+include ':mvvmlibrary'
