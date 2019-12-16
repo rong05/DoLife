@@ -7,7 +7,9 @@ import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ViewModel
 import com.rong.dolife.mvvm.model.IModel
 
-
+/**
+ * Created by rong on 2019/11/28
+ */
 interface IViewModel{
     /**
      * viewmodel 初始化操作
