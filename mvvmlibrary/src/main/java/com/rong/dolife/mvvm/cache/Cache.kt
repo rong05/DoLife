@@ -2,9 +2,13 @@ package com.rong.dolife.mvvm.cache
 
 import android.os.Parcel
 import android.os.Parcelable
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
-import java.lang.IllegalArgumentException
-
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import kotlin.IllegalStateException
 
 
 public interface Cache<K,V>{
@@ -27,7 +31,7 @@ public interface Cache<K,V>{
      * head of the queue. This returns null if a value is not cached and cannot
      * be created.
      */
-    fun get(key:K) : V
+    fun get(key:K) : V?
 
     /**
      * Caches {@code value} for {@code key}. The value is moved to the head of
@@ -35,7 +39,7 @@ public interface Cache<K,V>{
      *
      * @return the previous value mapped by {@code key}.
      */
-    fun put(key:K,value:V) : V
+    fun put(key:K,value:V) : V?
 
     /**
      * Remove the eldest entries until the total of remaining entries is at or
@@ -51,7 +55,7 @@ public interface Cache<K,V>{
      *
      * @return the previous value mapped by {@code key}.
      */
-    fun remove(key:K):V
+    fun remove(key:K):V?
 
 
     /**
@@ -68,7 +72,7 @@ public interface Cache<K,V>{
      *
      * <p>An entry's size must not change while it is in the cache.
      */
-    fun sizeOf(key: K,value : V)
+    fun sizeOf(key: K,value : V) : Int
 
     /**
     * For caches that do not override {@link #sizeOf}, this returns the maximum
@@ -82,11 +86,18 @@ public enum class CacheType{
 
 }
 
-public class LruCache<K,V>(private var maxSize: Int) : Cache<K,V> {
+public open class LruCache<K,V>(private var maxSize: Int) : Cache<K,V> {
 
     private val map : LinkedHashMap<K,V>
 
     private var size : Int = 0
+    private val mutex = Mutex()
+
+    private var putCount : Int = 0
+    private var createCount : Int = 0
+    private var evictionCount : Int = 0
+    private var hitCount : Int = 0
+    private var missCount : Int = 0
 
 
     init {
@@ -106,16 +117,121 @@ public class LruCache<K,V>(private var maxSize: Int) : Cache<K,V> {
         trimToSize(maxSize)
     }
 
-    override fun get(key: K): V {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun get(key: K): V? {
+        if(key == null){
+            throw NullPointerException("key == null")
+        }
+        var mapValue: V? = null;
+        runBlocking {
+            withContext(Dispatchers.Default){
+                mutex.withLock {
+                    mapValue = map.getValue(key)
+                    mapValue?.let{
+                        if(it != null){
+                            hitCount++
+                            return@withContext
+                        }
+                        missCount ++
+                    }
+                }
+            }
+        }
+
+        if (mapValue != null){
+            return mapValue
+        }
+
+        val createdValue : V = create(key) ?: return null;
+
+        runBlocking {
+            withContext(Dispatchers.Default){
+                mutex.withLock {
+                    createCount ++
+                    mapValue = map.put(key,createdValue);
+                    mapValue?.let {
+                        if(it != null){
+                            map.put(key,mapValue as V)
+                        }else{
+                            size += safeSizeOf(key,createdValue)
+                        }
+                    }
+                }
+            }
+        }
+
+        if (mapValue != null){
+            entryRemoved(false,key,createdValue, mapValue as V);
+            return mapValue
+        }else{
+            trimToSize(maxSize)
+            return createdValue
+        }
     }
 
-    override fun put(key: K, value: V): V {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    protected open fun create(key: K) : V? {
+        return null
+    }
+
+    protected open fun entryRemoved(evicted:Boolean, key: K?, oldValue:V?, newValue:V?){}
+
+    override fun put(key: K, value: V): V? {
+        if(key == null || value == null){
+            throw NullPointerException("key == null || value == null")
+        }
+        var previous : V ?= null
+        runBlocking {
+            withContext(Dispatchers.Default){
+                mutex.withLock {
+                    putCount ++
+                    size += safeSizeOf(key,value)
+                    previous = map.put(key,value)!!
+                    if(previous != null){
+                        size -= safeSizeOf(key,previous!!)
+                    }
+                }
+            }
+        }
+
+        if(previous != null){
+            entryRemoved(false,key,previous!!,value)
+        }
+
+        trimToSize(maxSize)
+        return previous
     }
 
     override fun trimToSize(maxSize: Int) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+         var running = true
+       loop@while (running) {
+           var key: K? = null
+           var value: V? = null
+           runBlocking {
+               withContext(Dispatchers.Default) {
+                   mutex.withLock {
+                       if(size < 0 || (map.isEmpty() && size != 0)){
+                           throw IllegalStateException(javaClass.name+".sizeOf() is reporting inconsistent results");
+                       }
+                       if(size <= maxSize){
+                           running = false
+                           return@withContext
+                      }
+                       val toEvict : Map.Entry<K, V>? = map.asIterable().iterator().next()
+                       if (toEvict == null){
+                          running = false
+                           return@withContext
+                       }
+                       key = toEvict.key
+                       value = toEvict.value
+                       map.remove(key!!)
+                       size -= safeSizeOf(key!!,value!!)
+                       evictionCount++
+                   }
+               }
+           }
+           if(running){
+               entryRemoved(true,key,value,null)
+           }
+       }
     }
 
     override fun remove(key: K): V {
@@ -126,7 +242,15 @@ public class LruCache<K,V>(private var maxSize: Int) : Cache<K,V> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun sizeOf(key: K, value: V) {
+    private fun safeSizeOf(key:K,value: V):Int{
+        val result = sizeOf(key,value)
+        if(result < 0){
+            throw IllegalStateException("Negative size :$key = $value")
+        }
+        return result
+    }
+
+    override fun sizeOf(key: K, value: V) : Int{
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
