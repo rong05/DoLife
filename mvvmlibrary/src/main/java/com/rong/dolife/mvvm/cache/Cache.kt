@@ -1,20 +1,18 @@
 package com.rong.dolife.mvvm.cache
 
-import android.os.Parcel
-import android.os.Parcelable
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlin.IllegalStateException
 
 
 public interface Cache<K,V>{
+
     
     companion object interface Factory<K,V>{
-        var DEFAULT_CACHE_SIZE: Int;
+
+        val DEFAULT_CACHE_SIZE: Int
 
         fun build(cacheType : CacheType) : Cache<K,V>
     }
@@ -201,7 +199,7 @@ public open class LruCache<K,V>(private var maxSize: Int) : Cache<K,V> {
     }
 
     override fun trimToSize(maxSize: Int) {
-         var running = true
+        var running = true
        loop@while (running) {
            var key: K? = null
            var value: V? = null
@@ -214,7 +212,7 @@ public open class LruCache<K,V>(private var maxSize: Int) : Cache<K,V> {
                        if(size <= maxSize){
                            running = false
                            return@withContext
-                      }
+                       }
                        val toEvict : Map.Entry<K, V>? = map.asIterable().iterator().next()
                        if (toEvict == null){
                           running = false
@@ -230,16 +228,36 @@ public open class LruCache<K,V>(private var maxSize: Int) : Cache<K,V> {
            }
            if(running){
                entryRemoved(true,key,value,null)
+           }else{
+               break@loop
            }
        }
     }
 
-    override fun remove(key: K): V {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun remove(key: K): V? {
+        if(key == null){
+            throw NullPointerException("key == null")
+        }
+       var previous : V ?= null
+        runBlocking {
+            withContext(Dispatchers.Default) {
+                mutex.withLock {
+                    previous = map.remove(key)!!
+                    if(previous != null){
+                        size -= safeSizeOf(key,previous!!)
+                    }
+                }
+            }
+        }
+        if (previous != null){
+            entryRemoved(false,key,previous,null)
+        }
+        return previous
     }
 
-    override fun size(): Int {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+
+    @Synchronized override fun size(): Int {
+        return size
     }
 
     private fun safeSizeOf(key:K,value: V):Int{
@@ -251,11 +269,11 @@ public open class LruCache<K,V>(private var maxSize: Int) : Cache<K,V> {
     }
 
     override fun sizeOf(key: K, value: V) : Int{
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return 1
     }
 
-    override fun maxSize(): Int {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    @Synchronized override fun maxSize(): Int {
+       return maxSize
     }
 
 }
