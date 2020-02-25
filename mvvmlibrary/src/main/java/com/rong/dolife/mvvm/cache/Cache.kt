@@ -12,7 +12,8 @@ public interface Cache<K,V>{
     
     companion object interface Factory<K,V>{
 
-        val DEFAULT_CACHE_SIZE: Int
+        companion object val DEFAULT_CACHE_SIZE: Int
+            get() = 100
 
         fun build(cacheType : CacheType) : Cache<K,V>
     }
@@ -82,6 +83,15 @@ public interface Cache<K,V>{
 
 public enum class CacheType{
 
+    RETROFIT_SERVICE_CACHE_TYPE,
+
+    CACHE_SERVICE_CACHE_TYPE,
+
+    ROOM_DATABASE_CACHE_TYPE,
+
+    EXTRAS_CACHE_TYPE,
+
+    CUSTOM_CACHE_TYPE
 }
 
 public open class LruCache<K,V>(private var maxSize: Int) : Cache<K,V> {
@@ -148,7 +158,7 @@ public open class LruCache<K,V>(private var maxSize: Int) : Cache<K,V> {
                     mapValue = map.put(key,createdValue);
                     mapValue?.let {
                         if(it != null){
-                            map.put(key,mapValue as V)
+                            map.put(key,it)
                         }else{
                             size += safeSizeOf(key,createdValue)
                         }
@@ -158,7 +168,7 @@ public open class LruCache<K,V>(private var maxSize: Int) : Cache<K,V> {
         }
 
         if (mapValue != null){
-            entryRemoved(false,key,createdValue, mapValue as V);
+            entryRemoved(false,key,createdValue, mapValue);
             return mapValue
         }else{
             trimToSize(maxSize)
