@@ -12,9 +12,10 @@
     <string name="title_notifications">Notifications</string>
 
     <string name="home_second">Home Second</string>
-    <string name="home_head_title">Monthly Bill</string>
-    <string name="home_head_expenses_consumption">Consumption Expenses</string>
-    <string name="home_head_income_initiative">Initiative Income</string>
-    <string name="home_head_income_passive">Initiative Passive</string>
+
+    <string name="home_head_title">本月账单</string>
+    <string name="home_head_expenses_consumption">消费支出</string>
+    <string name="home_head_income_initiative">主动收入</string>
+    <string name="home_head_income_passive">被动收入</string>
     <string name="home_head_data">00.00</string>
 </resources>

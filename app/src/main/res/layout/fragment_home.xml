@@ -6,27 +6,137 @@
     android:layout_height="match_parent"
     tools:context=".home.ui.home.HomeFragment">
 
-    <TextView
-        android:id="@+id/text_home"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:textAlignment="center"
-        android:textSize="20sp"
-        app:layout_constraintBottom_toTopOf="@id/button_home"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/button_home"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/next"
-        app:layout_constraintBottom_toBottomOf="parent"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/head"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:background="@color/home_head_bg"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/text_home" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tv_head_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/title_top_margin"
+            android:text="@string/home_head_title"
+            android:textColor="@color/home_head_title"
+            android:textSize="@dimen/home_head_title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <View
+            android:id="@+id/v_line"
+            android:layout_width="1dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="@dimen/line_margin"
+            android:layout_marginBottom="@dimen/line_margin"
+            android:background="@color/home_head_line"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tv_head_title" />
+
+        <TextView
+            android:id="@+id/tv_head_expenses_consumption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/title_top_margin"
+            android:text="@string/home_head_expenses_consumption"
+            android:textColor="@color/home_head_title"
+            android:textSize="@dimen/home_head_content"
+            app:layout_constraintEnd_toStartOf="@+id/v_line"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tv_head_title" />
+
+        <TextView
+            android:id="@+id/tv_head_consumption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/title_top_margin"
+            android:text="@string/home_head_data"
+            android:textColor="@color/home_head_data"
+            android:textSize="@dimen/home_head_title"
+            app:layout_constraintEnd_toStartOf="@+id/v_line"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tv_head_expenses_consumption" />
+
+        <TextView
+            android:id="@+id/tv_head_expenses_debt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/title_top_margin"
+            android:text="@string/home_head_expenses_consumption"
+            android:textColor="@color/home_head_title"
+            android:textSize="@dimen/home_head_content"
+            app:layout_constraintEnd_toStartOf="@+id/v_line"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tv_head_consumption" />
+
+        <TextView
+            android:id="@+id/tv_head_debt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/title_top_margin"
+            android:text="@string/home_head_data"
+            android:textColor="@color/home_head_data"
+            android:textSize="@dimen/home_head_title"
+            app:layout_constraintEnd_toStartOf="@+id/v_line"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tv_head_expenses_debt" />
+
+        <TextView
+            android:id="@+id/tv_head_income_initiative"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/title_top_margin"
+            android:text="@string/home_head_income_initiative"
+            android:textColor="@color/home_head_title"
+            android:textSize="@dimen/home_head_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/v_line"
+            app:layout_constraintTop_toBottomOf="@+id/tv_head_title" />
+
+        <TextView
+            android:id="@+id/tv_head_initiative"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/title_top_margin"
+            android:text="@string/home_head_data"
+            android:textColor="@color/home_head_data"
+            android:textSize="@dimen/home_head_title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/v_line"
+            app:layout_constraintTop_toBottomOf="@+id/tv_head_income_initiative" />
+
+        <TextView
+            android:id="@+id/tv_head_income_passive"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/title_top_margin"
+            android:text="@string/home_head_income_passive"
+            android:textColor="@color/home_head_title"
+            android:textSize="@dimen/home_head_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/v_line"
+            app:layout_constraintTop_toBottomOf="@+id/tv_head_initiative" />
+
+        <TextView
+            android:id="@+id/tv_head_passive"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/title_top_margin"
+            android:text="@string/home_head_data"
+            android:textColor="@color/home_head_data"
+            android:textSize="@dimen/home_head_title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/v_line"
+            app:layout_constraintTop_toBottomOf="@+id/tv_head_income_passive" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>
